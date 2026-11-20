@@ -1,0 +1,2 @@
+# Copy to .dev.vars for local dev (gitignored). Production: wrangler secret put <NAME>
+# EXAMPLE_SECRET=replace-me

@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cloudflare-netsuite-boilerplate",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-17",
+  "account_id": "859f25d110e80a38df65f76f731069ab",
+  "observability": {
+    "enabled": true
+  }
+
+  // Secrets (NetSuite keys etc.) never go in this file:
+  //   - local dev:   .dev.vars (gitignored), see .dev.vars.example
+  //   - production:  wrangler secret put <NAME>
+}
