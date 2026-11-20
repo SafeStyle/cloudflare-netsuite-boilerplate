@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Walkthrough · Cloudflare + NetSuite demo</title>
+    <meta
+      name="description"
+      content="A simulated, step-by-step walkthrough: download the Cloudflare + NetSuite demo, install Node.js, run it on a Windows PC, set up NetSuite and see your customers."
+    />
+    <link rel="stylesheet" href="walkthrough.css" />
+    <link rel="stylesheet" href="screens.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div>
+        <h1>From nothing to your NetSuite customers</h1>
+        <p>
+          A simulated walkthrough of setting up the Cloudflare + NetSuite demo on a Windows PC. Nothing
+          here is live: every screen is an illustration, and all names, IDs and customers are made up.
+        </p>
+      </div>
+      <a class="top-link" id="topLink" href="#" hidden></a>
+    </header>
+
+    <main class="layout">
+      <section class="stage-col" aria-label="Simulated desktop">
+        <div class="stage-wrap" id="stageWrap">
+          <div class="stage" id="stage" aria-hidden="true"></div>
+          <div class="start-card" id="startCard">
+            <div>
+              <h2>See the whole setup before you start</h2>
+              <p>
+                About 30 steps, 6 minutes at normal speed. It plays by itself and explains what is
+                happening, and why, beside the screen. Pause or step through it at any time.
+              </p>
+              <button type="button" class="primary" id="btnStart">&#9654; Start the walkthrough</button>
+              <p class="small">Keys: Space to pause, &larr; and &rarr; to change step.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button type="button" id="btnPrev">&larr; Back</button>
+          <button type="button" class="primary" id="btnPlay">&#9654; Play</button>
+          <button type="button" id="btnNext">Next &rarr;</button>
+          <button type="button" id="btnReplay">&#8635; Replay step</button>
+          <label><input type="checkbox" id="optAuto" checked /> Continue automatically</label>
+          <label
+            >Speed
+            <select id="optSpeed">
+              <option value="0.6">Slow</option>
+              <option value="1" selected>Normal</option>
+              <option value="1.6">Fast</option>
+              <option value="2.6">Very fast</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <aside class="panel" id="panel" aria-live="polite">
+        <p class="p-meta"><span id="pChapter"></span><span id="pCount"></span></p>
+        <h2 id="pTitle"></h2>
+        <h3>What is happening</h3>
+        <p id="pWhat"></p>
+        <div id="pWhyWrap">
+          <h3>Why</h3>
+          <p id="pWhy"></p>
+        </div>
+        <div id="pNotes"></div>
+      </aside>
+    </main>
+
+    <nav class="timeline" id="timeline" aria-label="Steps"></nav>
+
+    <noscript><p class="noscript">This walkthrough needs JavaScript. The same steps are written out in the project's README and documentation.</p></noscript>
+
+    <script src="engine.js"></script>
+    <script src="screens.js"></script>
+    <script src="steps.js"></script>
+    <script>
+      WT.start();
+    </script>
+  </body>
+</html>

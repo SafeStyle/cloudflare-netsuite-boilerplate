@@ -2,6 +2,10 @@
 /node_modules/
 *.tsbuildinfo
 
+# React Router
+/.react-router/
+/build/
+
 # Cloudflare
 .mf
 .wrangler
@@ -10,3 +14,10 @@
 
 # env
 .env
+
+# Private keys and certificates (e.g. NetSuite OAuth 2.0 client credentials).
+# Keep them out of the project folder entirely; this is a safety net.
+*.pem
+*.key
+*.crt
+*.cer

@@ -1,14 +1,40 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "cloudflare-netsuite-boilerplate",
-  "main": "src/index.ts",
+  // React Router request handler. The Cloudflare Vite plugin bundles it with the
+  // app and sets the static assets directory (build/client) at build time.
+  "main": "./workers/app.ts",
   "compatibility_date": "2026-11-17",
-  "account_id": "859f25d110e80a38df65f76f731069ab",
   "observability": {
     "enabled": true
-  }
+  },
+  "upload_source_maps": true,
 
-  // Secrets (NetSuite keys etc.) never go in this file:
-  //   - local dev:   .dev.vars (gitignored), see .dev.vars.example
-  //   - production:  wrangler secret put <NAME>
+  "assets": {
+    "binding": "ASSETS",
+    // Every request, static files included, goes through the Worker so the Zero
+    // Trust check in workers/zero-trust.ts runs first. Do not change this.
+    "run_worker_first": true
+  },
+
+  // Workers KV. Holds the current NetSuite access token between requests, so the
+  // Worker asks NetSuite for a token about once an hour instead of on every request
+  // (docs/netsuite-client.md). There is no "id" on purpose: Wrangler creates the
+  // namespace on the first deploy, and the dev server uses a local store in .wrangler/.
+  "kv_namespaces": [{ "binding": "NETSUITE_TOKENS" }],
+
+  // Names only. Values are set per deployment with `npx wrangler secret put <NAME>`
+  // and in .dev.vars locally; never in this file.
+  //   ACCESS_*    Zero Trust (docs/zero-trust.md). Not needed on the dev server.
+  //   NETSUITE_*  NetSuite OAuth 2.0 client credentials (docs/netsuite-credentials.md).
+  "secrets": {
+    "required": [
+      "ACCESS_TEAM_DOMAIN",
+      "ACCESS_AUD",
+      "NETSUITE_ACCOUNT_ID",
+      "NETSUITE_CLIENT_ID",
+      "NETSUITE_CERTIFICATE_ID",
+      "NETSUITE_PRIVATE_KEY"
+    ]
+  }
 }

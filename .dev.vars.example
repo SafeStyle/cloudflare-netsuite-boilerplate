@@ -1,2 +1,16 @@
-# Copy to .dev.vars for local dev (gitignored). Production: wrangler secret put <NAME>
-# EXAMPLE_SECRET=replace-me
+# Copy to .dev.vars for local dev (gitignored). Production: npx wrangler secret put <NAME>
+
+# Cloudflare Zero Trust (Access). Leave these empty locally: the dev server skips the
+# Zero Trust check. Every deployed instance needs real values, set with
+# `npx wrangler secret put`. See docs/zero-trust.md.
+ACCESS_TEAM_DOMAIN=
+ACCESS_AUD=
+
+# NetSuite OAuth 2.0 client credentials (M2M). See docs/netsuite-credentials.md.
+# The app's "NetSuite certificate" page generates the key and shows the exact
+# NETSUITE_PRIVATE_KEY line to paste here (one line, in double quotes, with \n
+# between the PEM lines).
+NETSUITE_ACCOUNT_ID=
+NETSUITE_CLIENT_ID=
+NETSUITE_CERTIFICATE_ID=
+NETSUITE_PRIVATE_KEY=
