@@ -94,6 +94,8 @@
       '<span class="cm"># Zero Trust check. See docs/zero-trust.md.</span>',
       "ACCESS_TEAM_DOMAIN=",
       "ACCESS_AUD=",
+      '<span class="cm"># The only people a deployed instance serves: full email addresses, comma-separated.</span>',
+      "ACCESS_ALLOWED_EMAILS=",
       "",
       '<span class="cm"># NetSuite OAuth 2.0 client credentials (M2M). See docs/netsuite-credentials.md.</span>',
       `NETSUITE_ACCOUNT_ID=${v("vAcct", have.acct && D.ACCOUNT)}`,
@@ -102,7 +104,7 @@
       `NETSUITE_PRIVATE_KEY=${v("vKey", have.key && D.KEY_LINE)}`,
     ].join("\n");
   };
-  const notepad = (have) => ({ title: ".dev.vars", html: vars(have), pos: "Ln 12, Col 1" });
+  const notepad = (have) => ({ title: ".dev.vars", html: vars(have), pos: "Ln 14, Col 1" });
 
   /** Opens NetSuite's Setup menu, walks down `path`, and loads `page`. */
   async function setup(s, path, page) {
@@ -908,7 +910,7 @@
             <p>Create a Cloudflare account, then run:</p>
             <pre>npx wrangler login\nnpm run deploy</pre>
             <p><code>npm run deploy</code> builds the app, then runs <code>npx wrangler deploy</code>.</p>
-            <p>The deployed app <b>refuses every visitor</b> until Cloudflare Zero Trust is set up. That block is built in, on purpose.</p>
+            <p>The deployed app <b>refuses every visitor</b> until Cloudflare Zero Trust is set up and their email is on the app's own allow-list. That block is built in, on purpose.</p>
           </div>
           <div class="best"><h5>Or stop here <small>most secure</small></h5>
             <p><b>Revoke the certificate in NetSuite</b>, on the M2M setup page, and delete the key from <code>.dev.vars</code>.</p>

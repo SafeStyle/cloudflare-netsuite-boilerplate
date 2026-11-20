@@ -59,8 +59,10 @@ explains this, and how to replace a certificate.
 
 Any deployed instance sits behind Cloudflare Zero Trust (Cloudflare Access). The
 Worker checks the Access sign-in token on every request, including images and scripts,
-and refuses anything without a valid one. If Zero Trust is not configured, the deployed
-app refuses everything. The local dev server is the only exception. Details are in
+and refuses anything without a valid one. It then checks the signed-in person against
+its own allow-list of email addresses, so an Access policy that is too generous still
+lets nobody unexpected in. If Zero Trust or the allow-list is not configured, the
+deployed app refuses everything. The local dev server is the only exception. Details are in
 [docs/zero-trust.md](docs/zero-trust.md).
 
 ## Set up a development environment
@@ -190,7 +192,7 @@ On first run, Claude Code opens your browser to sign in to your Claude account. 
 |---------|--------------|
 | `npm run dev` | Dev server with hot reload at http://localhost:5173 |
 | `npm run build` | Production build into `build/` |
-| `npm run deploy` | Build, then deploy to Cloudflare |
+| `npm run deploy` | Build, check the build is safe to deploy, then deploy to Cloudflare |
 | `npm run types` | Regenerate `worker-configuration.d.ts` and React Router route types |
 | `npm run typecheck` | Regenerate types and run `tsc` |
 

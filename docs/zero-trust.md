@@ -2,9 +2,10 @@
 
 Every deployed instance of this app sits behind Cloudflare Zero Trust (Cloudflare
 Access). The Worker serves no request that does not come from a user signed in
-through Access. The only exception is the local dev server.
+through Access who is also on the Worker's own allow-list. The only exception is the
+local dev server.
 
-There are two layers:
+There are three layers:
 
 1. **Cloudflare Access** on Cloudflare's network makes users sign in before their
    request reaches the Worker. It adds a signed JWT to each request it lets through.
@@ -12,6 +13,10 @@ There are two layers:
    static files included, and refuses anything without a valid one. If Access is
    switched off or misconfigured, or someone finds a route Access does not cover,
    the Worker still refuses the request.
+3. **The Worker's allow-list** (`ACCESS_ALLOWED_EMAILS`) names the people it serves.
+   Access decides who may sign in; the allow-list is the Worker's own decision. If
+   the Access policy is too generous, such as "Everyone" or a whole email domain,
+   a stranger can sign in but still gets nothing.
 
 ## What the Worker checks
 
@@ -21,15 +26,39 @@ static files or any route code.
 | Situation | Response |
 |-----------|----------|
 | Local dev server (`npm run dev`) on `localhost`, `127.0.0.1` or `[::1]` | Allowed; the header shows "Local dev · Zero Trust check skipped" |
+| The same, but the request came through a proxy or tunnel | Not treated as local; the rows below apply |
 | `ACCESS_TEAM_DOMAIN` or `ACCESS_AUD` not set, or the team domain is not `https` | `500 Server misconfigured.` (details go to the Worker logs) |
+| `ACCESS_ALLOWED_EMAILS` not set, empty, or with an entry that is not a full email address | `500 Server misconfigured.` |
 | No `Cf-Access-Jwt-Assertion` header | `403` |
-| JWT invalid, expired, signed by another key, wrong issuer or wrong audience | `403` |
+| JWT invalid, expired, without an expiry, not signed with RS256, signed by another key, wrong issuer or wrong audience | `403` |
 | Valid JWT without an `email` claim (an Access service token) | `403`, by design: only users are served |
-| Valid user JWT | Allowed; the user's email is passed to routes |
+| Valid user JWT, but the email is not in `ACCESS_ALLOWED_EMAILS` | `403`, saying the account is not on the allow-list |
+| Valid user JWT for an email in `ACCESS_ALLOWED_EMAILS` | Allowed; the user's email is passed to routes |
 
 The JWT is verified with [`jose`](https://github.com/panva/jose) against the team's
 public keys at `https://<team-name>.cloudflareaccess.com/cdn-cgi/access/certs`. Keys
-are cached in memory and refetched when Access rotates them.
+are cached in memory and refetched when Access rotates them. Only RS256, the
+algorithm Access signs with, is accepted, and the token must carry an expiry.
+
+### The allow-list
+
+`ACCESS_ALLOWED_EMAILS` is a required secret: the full email addresses of the people
+the Worker serves, separated by commas, spaces or new lines.
+
+```
+alex.taylor@example.com, morgan.lee@example.com
+```
+
+- Addresses are compared without regard to capitals.
+- **Wildcards and whole domains are not accepted.** An entry such as `*`,
+  `*@example.com` or `@example.com` makes the whole setting invalid, and the Worker
+  answers `500` to everyone until it is fixed. This is deliberate: the list exists to
+  stop a broad rule letting in people nobody meant to.
+- To add or remove someone, set the secret again with the full new list. That deploys
+  a new version at once.
+
+Keep the Access policy tight as well. The allow-list is the second check, not a
+reason to open the first.
 
 ### Why the local exception is safe
 
@@ -38,6 +67,23 @@ replaces that with `false` and removes the branch, so deployed code does not con
 it. As a second guard, the branch also requires a loopback hostname, and on
 Cloudflare's network a request's hostname is never loopback. If you open the dev
 server from another device on your network (`--host`), the check applies there too.
+
+Two more guards cover the ways that could go wrong:
+
+- **A development build cannot be deployed with `npm run deploy`.** Building with
+  `NODE_ENV=development` leaves the exception in the code. `scripts/check-build.mjs`
+  runs between the build and `wrangler deploy`, looks for it, and stops the deploy if
+  it is there. It also stops if `run_worker_first` is not `true`. Always deploy with
+  `npm run deploy`, not `npx wrangler deploy` on its own, which skips this check.
+- **A tunnel does not get the exception.** Tools such as ngrok or cloudflared can
+  forward a public address to the dev server and rewrite the Host header to
+  `localhost`. They also add headers such as `X-Forwarded-For`, `Forwarded`, `Via`
+  or `CF-Ray`. A request carrying any of those is not treated as local and gets the
+  full check, so through a tunnel the app answers `500` unless Zero Trust is
+  configured in `.dev.vars`. The dev server's terminal says which header it saw.
+
+This catches the common tunnel tools, not every possible proxy. **Do not put the dev
+server on the internet.** It has no sign-in, and `.dev.vars` holds a working key.
 
 ### Why the Worker checks the JWT itself
 
@@ -86,7 +132,8 @@ ends with a Zero Trust organisation and a team name.
    npm run deploy
    ```
 
-   Until steps 2 and 3 are done, the deployed Worker answers every request with
+   `npm run deploy` builds, checks the build is safe to deploy, then deploys. Until
+   steps 2 and 3 are done, the deployed Worker answers every request with
    `500 Server misconfigured.`, so it is never open.
 
 2. **Put the Worker behind Access.** In the Cloudflare dashboard:
@@ -94,7 +141,8 @@ ends with a Zero Trust organisation and a team name.
    2. Open the **Access** tab and select **Protect this Worker behind Access**.
    3. Choose **All traffic**, so the `workers.dev` address, any custom domains and
       version or preview URLs are all covered.
-   4. Under **Authentication policy**, choose who may sign in, then select **Apply Access**.
+   4. Under **Authentication policy**, choose who may sign in, then select **Apply
+      Access**. Name the people or a group. Do not choose **Everyone**.
 
 3. **Give the Worker its Access settings.** Find the Access application that now
    protects the Worker under **Zero Trust** > **Access controls** > **Applications**.
@@ -103,15 +151,21 @@ ends with a Zero Trust organisation and a team name.
    ```bash
    npx wrangler secret put ACCESS_TEAM_DOMAIN   # https://<team-name>.cloudflareaccess.com
    npx wrangler secret put ACCESS_AUD           # the AUD tag
+   npx wrangler secret put ACCESS_ALLOWED_EMAILS   # you@example.com, colleague@example.com
    ```
+
+   `ACCESS_ALLOWED_EMAILS` is the list of people the Worker itself will serve, as
+   full email addresses. See [The allow-list](#the-allow-list).
 
    Each `secret put` deploys a new version of the Worker immediately. The AUD tag only
    changes if the Access application is deleted and recreated.
 
 4. **Check it.** Open the Worker's URL in a private browser window. You should get the
    Cloudflare Access sign-in page first, then the app with "Signed in as <your email>"
-   in the header. If you get `500`, a secret is missing or wrong. If you get `403`
-   after signing in, the AUD tag or team domain does not match the Access application.
+   in the header. If you get `500`, a secret is missing or wrong; the Worker's logs
+   say which. If you get `403` after signing in, either the message says your account
+   is not on the allow-list, or the AUD tag or team domain does not match the Access
+   application.
 
 ## Rules for changing this
 
@@ -119,6 +173,9 @@ These rules are also directives in `CLAUDE.md`.
 
 - Do not add bypasses: no environment flags, allow-listed paths, public routes, or
   acceptance of requests without a valid user JWT.
+- Do not loosen the allow-list: no wildcards, no domains, no default that lets
+  everyone in when it is empty.
+- Keep `node scripts/check-build.mjs` in the `deploy` script.
 - Keep `authenticate()` as the first thing `workers/app.ts` does, and keep
   `"run_worker_first": true`.
 - Any new way into the Worker (another handler, a Durable Object reachable over HTTP,

@@ -5,6 +5,8 @@
 # `npx wrangler secret put`. See docs/zero-trust.md.
 ACCESS_TEAM_DOMAIN=
 ACCESS_AUD=
+# The only people a deployed instance serves: full email addresses, comma-separated.
+ACCESS_ALLOWED_EMAILS=
 
 # NetSuite OAuth 2.0 client credentials (M2M). See docs/netsuite-credentials.md.
 # The app's "NetSuite certificate" page generates the key and shows the exact

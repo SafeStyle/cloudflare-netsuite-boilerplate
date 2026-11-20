@@ -18,9 +18,15 @@
      `workers/zero-trust.ts` before anything else runs. Keep that order in
      `workers/app.ts`, and keep `"run_worker_first": true` in `wrangler.jsonc`.
    - The only exception is the local dev server. It is decided at build time
-     (`import.meta.env.DEV`) and also requires a loopback hostname. Do not add any
-     other bypass: no environment flags, allow-listed paths, public routes, or
-     acceptance of a request without a valid user JWT.
+     (`import.meta.env.DEV`), requires a loopback hostname, and is refused to requests
+     that came through a proxy or tunnel. Do not add any other bypass: no environment
+     flags, allow-listed paths, public routes, or acceptance of a request without a
+     valid user JWT.
+   - A signed-in user must also be in `ACCESS_ALLOWED_EMAILS`, the Worker's own
+     allow-list of full email addresses. Do not loosen it: no wildcards, no domains,
+     and no "allow everyone" when it is empty.
+   - `npm run deploy` runs `scripts/check-build.mjs`, which refuses to deploy a build
+     that still contains the local exception. Keep it in the deploy script.
    - Any new way into the Worker (another handler, a Durable Object reachable over
      HTTP, WebSockets) must go through the same check.
    - If a feature seems to need unauthenticated or machine access, such as NetSuite

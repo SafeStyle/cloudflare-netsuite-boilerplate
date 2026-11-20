@@ -33,7 +33,8 @@ Unmatched URLs get a 404 rendered by the `ErrorBoundary` in `app/root.tsx`.
 | Path | Purpose |
 |------|---------|
 | `workers/app.ts` | Worker entry (`main` in `wrangler.jsonc`). Zero Trust check, then static files, then React Router. Durable Objects, Workflows, and queue or cron handlers would also be exported from here. |
-| `workers/zero-trust.ts` | Access JWT verification and the local dev exception. |
+| `workers/zero-trust.ts` | Access JWT verification, the email allow-list and the local dev exception. |
+| `scripts/check-build.mjs` | Run by `npm run deploy` before `wrangler deploy`. Stops the deploy if the build could serve a request without the Zero Trust check. |
 | `app/root.tsx` | HTML shell (`Layout`), header with the menu and signed-in user, root `ErrorBoundary`. |
 | `app/routes.ts` | Route table. Routes are not picked up from the file system; each one must be listed here. |
 | `app/routes/` | Route modules: `home.tsx`, `docs/` (in-app documentation), `netsuite-certificate.tsx` (certificate generator), `customers.tsx` (customers read from NetSuite), `status.tsx` (configuration and connectivity checks), `api.health.ts`. |

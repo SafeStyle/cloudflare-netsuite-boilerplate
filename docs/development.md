@@ -29,7 +29,7 @@ Zero Trust, so to try one, deploy it behind Access.
 |---------|--------------|
 | `npm run dev` | Dev server with hot reload at http://localhost:5173 |
 | `npm run build` | Production build into `build/` |
-| `npm run deploy` | Build, then deploy to Cloudflare |
+| `npm run deploy` | Build, run `scripts/check-build.mjs`, then deploy to Cloudflare. The check stops the deploy if the build still contains the local dev exception to the Zero Trust check. Do not deploy with `npx wrangler deploy` alone. |
 | `npm run types` | Regenerate `worker-configuration.d.ts` (Wrangler) and route types in `.react-router/` |
 | `npm run typecheck` | `npm run types`, then `tsc -b` |
 
@@ -54,7 +54,7 @@ Never put keys in `wrangler.jsonc`.
 - **Production:** `npx wrangler secret put <NAME>`. This creates and deploys a new
   Worker version immediately.
 
-The Zero Trust secrets, `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD`, can stay empty in
+The Zero Trust secrets, `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD` and `ACCESS_ALLOWED_EMAILS`, can stay empty in
 `.dev.vars`. The dev server does not use them, and the empty entries only keep
 Wrangler from warning.
 

@@ -26,11 +26,13 @@
   // Names only. Values are set per deployment with `npx wrangler secret put <NAME>`
   // and in .dev.vars locally; never in this file.
   //   ACCESS_*    Zero Trust (docs/zero-trust.md). Not needed on the dev server.
+  //               ACCESS_ALLOWED_EMAILS is the Worker's own list of who may use it.
   //   NETSUITE_*  NetSuite OAuth 2.0 client credentials (docs/netsuite-credentials.md).
   "secrets": {
     "required": [
       "ACCESS_TEAM_DOMAIN",
       "ACCESS_AUD",
+      "ACCESS_ALLOWED_EMAILS",
       "NETSUITE_ACCOUNT_ID",
       "NETSUITE_CLIENT_ID",
       "NETSUITE_CERTIFICATE_ID",
